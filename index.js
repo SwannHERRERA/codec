@@ -31,9 +31,10 @@ getFileAsBinary = (path) => {
     return binary_file;
 }
 
-compressFile = (file, key) => {
-    let results = [];
+compressFile = (file, key, path_to_new_file) => {
+    let writeStream = fs.createWriteStream(path_to_new_file);
     file = file.flat().join('');
+
     let regex = new RegExp('.{1,' + utils_helper.IDENTITY_MATRICE_LENGTH + '}', 'g');
     file = file.match(regex);
     file.forEach((group_of_bits) => {
@@ -52,14 +53,20 @@ compressFile = (file, key) => {
             tmp[i] = tmp[i] % 2;
         }
         /**
-         * Ici mettre dans le fichier et non dans résults
+         * faire le truc de manière sync
          */
-        console.log(tmp);
-        results.push(tmp);
+        writeStream.write(bi_to_int(tmp), 'binary');
     });
-    results = results.flat();
-    return makeOctets(results);
+    writeStream.end();
 };
+
+bi_to_int = (binary) => {
+    let sum = Number();
+    for (let i = 0; i < binary.length; i += 1) {
+        sum += binary[i] * (2 ** i);
+    }
+    return new Uint8Array([sum]);
+}
 
 makeOctets = (array_of_bit) => {
     let new_array = new Array(Math.ceil(array_of_bit.length / 8));
@@ -99,14 +106,19 @@ writeFile = (path, data) => {
     });
 }
 
-uncompressFile = (compressed_file, identity_matrice) => {
+uncompressFile = (compressed_file, identity_matrice, path_to_new_file) => {
     let result = [];
+    let writeStream = fs.createWriteStream(path_to_new_file);
     for (index = 0; index < compressed_file.length; index += utils_helper.LENGTH_REFERENCE) {
         identity_matrice.forEach(number => {
             result.push(Number(compressed_file[index + number]));
         });
+        if (result.length % 8 === 0) {
+            writeStream.write(bi_to_int(result), 'binary');
+            result = [];
+        }
     }
-    return makeOctets(result);
+    writeStream.end();
 }
 
 
@@ -122,16 +134,14 @@ inquirer.prompt([{
             {
                 name: 'path',
                 message: 'what\'s the path to your file ?',
-                default:  './black-and-white.jpg',
+                default:  './image.jpg',
             },
         ]).then(answers_2 => {
             if (answers_1.action == 'chiffrer') { // mode chiffrement
                 console.time("chiffrement");
                 const key = key_helper.getKey('./key4.txt');
                 const file = getFileAsBinary(answers_2.path);
-                const compressed_file = compressFile(file, key);
-                const compressed_file_as_int = binaryArrayToInt(compressed_file);
-                writeFile(answers_2.path + '.cry', compressed_file_as_int);
+                const compressed_file = compressFile(file, key, answers_2.path + '.cry');
                 console.timeEnd("chiffrement");
             } else { // mode déchiffrement
                 console.time("déchiffrement");
@@ -139,9 +149,7 @@ inquirer.prompt([{
                 const identity_matrice = key_helper.getIidentityMatrice(key);
                 console.log(identity_matrice);
                 const compressed_file = getFileAsBinary(answers_2.path + '.cry');
-                const uncompressed_file = uncompressFile(compressed_file.flat(), identity_matrice);
-                const uncompressed_file_as_int = binaryArrayToInt(uncompressed_file);
-                writeFile(answers_2.path, uncompressed_file_as_int);
+                uncompressFile(compressed_file.flat(), identity_matrice, answers_2.path);
                 console.timeEnd("déchiffrement");
             }
         });
