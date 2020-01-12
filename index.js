@@ -53,7 +53,7 @@ NewCompressFile = (path, key) => {
 		}
 	});
 	readStream.on('end', () => {
-		console.log('end of reading');
+		console.timeEnd('chiffrement');
 	});
 };
 
@@ -72,7 +72,7 @@ makeOctets = (array_of_bit) => {
 			compteur_octet += 1;
 		}
 	}
-	if (new_array[compteur_octet] != undefined) {
+	if (new_array[compteur_octet] !== undefined) {
 		throw new Error('Taille de clé incorrect');
 	}
 	for (let i = 0; i < new_array.length; i += 1) {
@@ -99,7 +99,7 @@ unCompressFile = (path, identity_matrice) => {
 		fs.closeSync(fd);
 	});
 	readStream.on('end', () => {
-		console.log('end of reading');
+		console.timeEnd('déchiffrement');
 	});
 };
 
@@ -127,14 +127,12 @@ inquirer
 					console.time('chiffrement');
 					const key = key_helper.getKey('./key4.txt');
 					NewCompressFile(answers_2.path, key);
-					console.timeEnd('chiffrement');
 				} else {
 					// mode déchiffrement
 					console.time('déchiffrement');
 					const key = key_helper.getKey('./key4.txt');
 					const identity_matrice = key_helper.getIidentityMatrice(key);
 					unCompressFile(answers_2.path, identity_matrice);
-					console.timeEnd('déchiffrement');
 				}
 			});
 	});
