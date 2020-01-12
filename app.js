@@ -25,13 +25,14 @@ init_array = (nb_of_element) => {
 
 NewCompressFile = (path, key) => {
 	let readStream = fs.createReadStream(path, { encoding: null });
-	let writeStream = fs.createWriteStream(path + '.cry', { encoding: null });
-
+	const fd = fs.openSync(path + '.cry', 'w');
+	let regex = new RegExp('.{1,' + utils_helper.IDENTITY_MATRICE_LENGTH + '}', 'g');
 	readStream.on('data', (chunk) => {
 		if (chunk !== null) {
+			// console.dir(chunk.length);
+			// console.dir(chunk);
 			chunk.forEach((integer) => {
 				let binary_string = convert_binary(integer);
-				let regex = new RegExp('.{1,' + utils_helper.IDENTITY_MATRICE_LENGTH + '}', 'g');
 				binary_string = binary_string.match(regex);
 				binary_string.forEach((group_of_bits) => {
 					let result = init_array(utils_helper.LENGTH_REFERENCE);
@@ -48,7 +49,8 @@ NewCompressFile = (path, key) => {
 							}
 						}
 					}
-					writeStream.write(binary_to_int(result.reverse()));
+					// writeStream.write(binary_to_int(result.reverse()));
+					fs.writeSync(fd, binary_to_int(result.reverse()), null, null);
 				});
 			});
 		}
@@ -56,6 +58,7 @@ NewCompressFile = (path, key) => {
 	readStream.on('end', () => {
 		console.log('end of reading');
 	});
+	// fs.closeSync(fd);
 };
 
 makeOctets = (array_of_bit) => {
@@ -84,9 +87,9 @@ makeOctets = (array_of_bit) => {
 
 unCompressFile = (path, identity_matrice) => {
 	let readStream = fs.createReadStream(path + '.cry', { encoding: null });
-	let writeStream = fs.createWriteStream(path, { encoding: null });
 	let result = [];
 	readStream.on('data', (chunk) => {
+		const fd = fs.openSync(path, 'w');
 		let binary_array_of_string = [];
 		if (chunk !== null) {
 			chunk.forEach((integer) => {
@@ -98,7 +101,7 @@ unCompressFile = (path, identity_matrice) => {
 				});
 			}
 			const results = makeOctets(result);
-			writeStream.write(results);
+			fs.writeSync(fd, results, null, null);
 		}
 	});
 	readStream.on('end', () => {
