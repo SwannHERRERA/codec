@@ -26,12 +26,10 @@ init_array = (nb_of_element) => {
 NewCompressFile = (path, key) => {
 	let readStream = fs.createReadStream(path, { encoding: null });
 	let writeStream = fs.createWriteStream(path + '.cry', { encoding: null });
-	let buffer;
 
-	readStream.on('readable', () => {
-		buffer = readStream.read();
-		if (buffer !== null) {
-			buffer.forEach((integer) => {
+	readStream.on('data', (chunk) => {
+		if (chunk !== null) {
+			chunk.forEach((integer) => {
 				let binary_string = convert_binary(integer);
 				let regex = new RegExp('.{1,' + utils_helper.IDENTITY_MATRICE_LENGTH + '}', 'g');
 				binary_string = binary_string.match(regex);
@@ -55,12 +53,8 @@ NewCompressFile = (path, key) => {
 			});
 		}
 	});
-
 	readStream.on('end', () => {
 		console.log('end of reading');
-	});
-	writeStream.on('end', () => {
-		console.log('end of writing');
 	});
 };
 
@@ -91,13 +85,11 @@ makeOctets = (array_of_bit) => {
 unCompressFile = (path, identity_matrice) => {
 	let readStream = fs.createReadStream(path + '.cry', { encoding: null });
 	let writeStream = fs.createWriteStream(path, { encoding: null });
-	let buffer;
 	let result = [];
-	readStream.on('readable', () => {
-		buffer = readStream.read();
+	readStream.on('data', (chunk) => {
 		let binary_array_of_string = [];
-		if (buffer !== null) {
-			buffer.forEach((integer) => {
+		if (chunk !== null) {
+			chunk.forEach((integer) => {
 				binary_array_of_string += convert_binary(integer);
 			});
 			for (index = 0; index < binary_array_of_string.length; index += utils_helper.LENGTH_REFERENCE) {
@@ -111,9 +103,6 @@ unCompressFile = (path, identity_matrice) => {
 	});
 	readStream.on('end', () => {
 		console.log('end of reading');
-	});
-	writeStream.on('end', () => {
-		console.log('end of writing');
 	});
 };
 
