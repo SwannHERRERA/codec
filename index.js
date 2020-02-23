@@ -80,7 +80,6 @@ makeOctets = array_of_bit => {
   }
   for (let i = 0; i < new_array.length; i += 1) {
     new_array[i] = binary_to_int(new_array[i].reverse());
-    console.log(new_array[i]);
   }
   return new Uint8Array(new_array);
 };
@@ -98,11 +97,10 @@ unCompressFileOld = (path, identity_matrice) => {
         });
       });
       const results = makeOctets(result);
-      console.log(results);
       writeStream.write(results);
     }
   });
-  readStream.on("end", () => {
+  writeStream.on("end", () => {
     console.timeEnd("déchiffrement");
   });
 };
@@ -115,7 +113,6 @@ unCompressFile = (path, identity_matrice) => {
       result = [];
       for (let i = 0; i < chunk.length; i += 2) {
         let binary_number = convert_binary(chunk[i]);
-        console.log(binary_number);
         let string = "";
         identity_matrice.forEach(j => {
           string = string.concat(binary_number[j]);
@@ -130,10 +127,12 @@ unCompressFile = (path, identity_matrice) => {
         result[i] = parseInt(result[i], 2);
       }
       const Buffer = new Uint8Array(result);
+      console.dir(Buffer);
       writeStream.write(Buffer);
     }
   });
-  readStream.on("end", () => {
+  writeStream.on("end", () => {
+    console.log("result");
     console.log(result);
     console.timeEnd("déchiffrement");
   });
