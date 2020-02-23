@@ -1,0 +1,3 @@
+# CODEC
+
+> tap npm install
