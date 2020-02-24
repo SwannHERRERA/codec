@@ -1,6 +1,17 @@
 const fs = require("fs");
 
 const inquirer = require("inquirer");
+const express = require("express");
+const port = 3004;
+const routes = require("./routes/index.js");
+
+const app = express();
+
+app.use(routes);
+
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});
 
 const key_helper = require("./key.js");
 const utils_helper = require("./utils_helper.js");
