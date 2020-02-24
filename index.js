@@ -23,7 +23,7 @@ init_array = nb_of_element => {
   return result;
 };
 
-NewCompressFile = (path, key) => {
+CompressFile = (path, key) => {
   let readStream = fs.createReadStream(path, { encoding: null });
   const fd = fs.openSync(path + "c", "w");
   let regex = new RegExp(
@@ -60,51 +60,6 @@ NewCompressFile = (path, key) => {
   });
 };
 
-makeOctets = array_of_bit => {
-  let new_array = new Array(Math.ceil(array_of_bit.length / 8));
-  for (let i = 0; i < new_array.length; i += 1) {
-    new_array[i] = [];
-  }
-  let compteur_octet = 0;
-  let compteur_bit = 0;
-  for (let i = 0; i < array_of_bit.length; i += 1) {
-    new_array[compteur_octet][compteur_bit] = array_of_bit[i];
-    compteur_bit += 1;
-    if (compteur_bit >= 8) {
-      compteur_bit = 0;
-      compteur_octet += 1;
-    }
-  }
-  if (new_array[compteur_octet] !== undefined) {
-    throw new Error("Taille de clé incorrect");
-  }
-  for (let i = 0; i < new_array.length; i += 1) {
-    new_array[i] = binary_to_int(new_array[i].reverse());
-  }
-  return new Uint8Array(new_array);
-};
-
-unCompressFileOld = (path, identity_matrice) => {
-  let readStream = fs.createReadStream(path + "c", { encoding: null });
-  let writeStream = fs.createWriteStream(path, { encoding: null });
-  let result = [];
-  readStream.on("data", chunk => {
-    if (chunk !== null) {
-      chunk.forEach(integer => {
-        const octets = convert_binary(integer);
-        identity_matrice.forEach(number => {
-          result.push(Number(octets[number]));
-        });
-      });
-      const results = makeOctets(result);
-      writeStream.write(results);
-    }
-  });
-  writeStream.on("end", () => {
-    console.timeEnd("déchiffrement");
-  });
-};
-
 unCompressFile = (path, identity_matrice) => {
   let readStream = fs.createReadStream(path + "c", { encoding: null });
   fs.openSync(path, "w");
@@ -132,8 +87,6 @@ unCompressFile = (path, identity_matrice) => {
     }
   });
   readStream.on("end", () => {
-    console.log("result");
-    console.log(result);
     console.timeEnd("déchiffrement");
   });
 };
@@ -161,7 +114,7 @@ inquirer
           // mode chiffrement
           console.time("chiffrement");
           const key = key_helper.getKey("./G4C.txt");
-          NewCompressFile(answers_2.path, key);
+          CompressFile(answers_2.path, key);
         } else {
           // mode déchiffrement
           console.time("déchiffrement");
