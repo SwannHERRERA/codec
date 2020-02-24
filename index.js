@@ -107,7 +107,7 @@ unCompressFileOld = (path, identity_matrice) => {
 
 unCompressFile = (path, identity_matrice) => {
   let readStream = fs.createReadStream(path + "c", { encoding: null });
-  let writeStream = fs.createWriteStream(path, { encoding: null });
+  fs.openSync(path, "w");
   readStream.on("data", chunk => {
     if (chunk !== null) {
       result = [];
@@ -115,23 +115,23 @@ unCompressFile = (path, identity_matrice) => {
         let binary_number = convert_binary(chunk[i]);
         let string = "";
         identity_matrice.forEach(j => {
+          // j start at 1
           string = string.concat(binary_number[j]);
         });
+        binary_number = convert_binary(chunk[i + 1]);
         identity_matrice.forEach(j => {
-          // j start at 1
-          string = string.concat(binary_number[j + 3]);
+          string = string.concat(binary_number[j]);
         });
         result.push(string);
       }
       for (let i = 0; i < result.length; i += 1) {
         result[i] = parseInt(result[i], 2);
       }
-      const Buffer = new Uint8Array(result);
-      console.dir(Buffer);
-      writeStream.write(Buffer);
+      const buffer = new Uint8Array(result);
+      fs.appendFileSync(path, buffer);
     }
   });
-  writeStream.on("end", () => {
+  readStream.on("end", () => {
     console.log("result");
     console.log(result);
     console.timeEnd("déchiffrement");
@@ -153,7 +153,7 @@ inquirer
         {
           name: "path",
           message: "what's the path to your file ?",
-          default: "./EPREUVE 1.txt"
+          default: "./EPREUVE 2.mp3"
         }
       ])
       .then(answers_2 => {
@@ -167,7 +167,7 @@ inquirer
           console.time("déchiffrement");
           const key = key_helper.getKey("./G4C.txt");
           const identity_matrice = key_helper.getIdentityMatrice(key);
-          unCompressFileOld(answers_2.path, identity_matrice);
+          unCompressFile(answers_2.path, identity_matrice);
         }
       });
   });
