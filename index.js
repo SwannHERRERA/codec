@@ -12,7 +12,7 @@ binary_to_int = binary => {
   for (let i = 0; i < binary.length; i += 1) {
     sum += binary[i] * 2 ** i;
   }
-  return new Uint8Array([sum]);
+  return sum;
 };
 
 init_array = nb_of_element => {
@@ -30,6 +30,7 @@ CompressFile = (path, key) => {
     ".{1," + utils_helper.IDENTITY_MATRICE_LENGTH + "}",
     "g"
   );
+  let array = [];
   readStream.on("data", chunk => {
     if (chunk !== null) {
       chunk.forEach(integer => {
@@ -50,9 +51,12 @@ CompressFile = (path, key) => {
               }
             }
           }
-          fs.writeSync(fd, binary_to_int(result.reverse()), null, null);
+          array.push(binary_to_int(result.reverse()));
         });
       });
+      const buffer = new Uint8Array(array);
+      array = [];
+      fs.writeSync(fd, buffer, null, null);
     }
   });
   readStream.on("end", () => {
